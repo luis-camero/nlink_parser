@@ -92,16 +92,19 @@ void Nodeframe1Callback(const nlink_parser::LinktrackNodeframe1 &msg)
 
 void Tagframe0Callback(const nlink_parser::LinktrackTagframe0 &msg)
 {
-  static PosePair *pose = nullptr;
+  static PosePair *pose0 = nullptr;
+  static PosePair *pose1 = nullptr;
+  PosePair *pose = (msg.id == 0) ? pose0 : pose1;
   if (!pose)
   {
     pose = new PosePair;
-    auto topic = "nlt_tagframe0_pose";
+    auto topic = "nlt_tag" + std::to_string(msg.id) + "_pose";
     pose->publisher =
         ros::NodeHandle().advertise<geometry_msgs::PoseStamped>(topic, 10);
-    TopicAdvertisedTip(topic);
+    TopicAdvertisedTip(topic.c_str());
     pose->msg.header.frame_id = frameId;
   }
+  (msg.id == 0) ? pose0 = pose : pose1 = pose;
   auto &msg_pose = pose->msg;
   ++msg_pose.header.seq;
   msg_pose.header.stamp = ros::Time(); // ros::Time(msg.system_time / 1000.0)
